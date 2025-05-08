@@ -18,6 +18,7 @@ from material_data import (
 )
 from data_utils import calculate_material_scores, filter_materials_by_application
 from model import MaterialRecommender
+from database import init_db, seed_database, db, Material, Supplier, Project, Recommendation, UserFeedback
 import os
 
 app = Flask(__name__)
@@ -27,6 +28,10 @@ app.secret_key = os.urandom(24)
 materials_df = generate_material_database()
 suppliers_df = generate_supplier_database()
 recommender = MaterialRecommender()
+
+# Initialize and seed the database
+init_db(app)
+seed_database(app, materials_df, suppliers_df)
 
 def create_material_comparison_chart(selected_material_ids):
     """
@@ -300,8 +305,47 @@ def get_recommendations():
     # Store project specs in session
     session['project_specs'] = project_specs
     
+    # Project name from form or default
+    project_name = request.form.get('project_name', 'Unnamed Project')
+    project_description = request.form.get('project_description', '')
+    
+    # Save project to database
+    new_project = Project(
+        name=project_name,
+        description=project_description,
+        applications=[project_specs['applications']],
+        material_types=project_specs['material_types'],
+        min_strength_mpa=project_specs['min_strength_mpa'],
+        min_durability_years=project_specs['min_durability_years'],
+        fire_resistance_requirement=project_specs['fire_resistance_requirement'],
+        water_resistance_requirement=project_specs['water_resistance_requirement'],
+        thermal_requirement=project_specs['thermal_requirement'],
+        eco_friendly_requirement=project_specs['eco_friendly_requirement'],
+        budget_constraint=project_specs['budget_constraint'],
+        installation_time_constraint=project_specs['installation_time_constraint'],
+        environmental_conditions=project_specs['environmental_conditions']
+    )
+    
+    db.session.add(new_project)
+    db.session.commit()
+    
+    # Store project ID in session
+    session['project_id'] = new_project.id
+    
     # Get recommendations
     recommended_materials = recommender.recommend_materials(project_specs, n_recommendations=10)
+    
+    # Save recommendations to database
+    for i, (_, material) in enumerate(recommended_materials.iterrows()):
+        recommendation = Recommendation(
+            project_id=new_project.id,
+            material_id=material['id'],
+            score=float(material['total_score']),
+            rank=i+1
+        )
+        db.session.add(recommendation)
+    
+    db.session.commit()
     
     # Convert DataFrame to dict for JSON serialization
     recommended_materials_dict = recommended_materials.reset_index().to_dict(orient='records')
@@ -315,7 +359,8 @@ def get_recommendations():
     return jsonify({
         'success': True,
         'materials': recommended_materials_dict,
-        'scores_chart': scores_chart
+        'scores_chart': scores_chart,
+        'project_id': new_project.id
     })
 
 @app.route('/get_durability_cost_chart')
