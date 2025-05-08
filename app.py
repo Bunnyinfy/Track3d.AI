@@ -173,11 +173,8 @@ def clear_comparison():
 
 def display_project_specifications():
     """Display the project specifications form."""
-    colored_header(
-        label="Project Specifications",
-        description="Define your project requirements to get material recommendations",
-        color_name="blue-green"
-    )
+    st.header("Project Specifications")
+    st.info("Define your project requirements to get material recommendations")
     
     col1, col2 = st.columns(2)
     
@@ -334,11 +331,8 @@ def display_project_specifications():
 
 def display_recommendations():
     """Display the recommendations."""
-    colored_header(
-        label="Material Recommendations",
-        description="Top materials for your project based on your specifications",
-        color_name="blue-green"
-    )
+    st.header("Material Recommendations")
+    st.info("Top materials for your project based on your specifications")
     
     if st.session_state.recommended_materials is not None:
         # Display the recommendation scores visualization
@@ -390,11 +384,8 @@ def display_recommendations():
 
 def display_comparison():
     """Display the material comparison."""
-    colored_header(
-        label="Material Comparison",
-        description="Compare different materials side by side",
-        color_name="blue-green"
-    )
+    st.header("Material Comparison")
+    st.info("Compare different materials side by side")
     
     if not st.session_state.selected_materials:
         st.info("Add materials to comparison from the Recommendations tab.")
@@ -482,11 +473,8 @@ def display_comparison():
 
 def display_cost_analysis():
     """Display the cost analysis."""
-    colored_header(
-        label="Cost Analysis",
-        description="Analyze the cost implications of different materials",
-        color_name="blue-green"
-    )
+    st.header("Cost Analysis")
+    st.info("Analyze the cost implications of different materials")
     
     if not st.session_state.selected_materials:
         st.info("Add materials to comparison from the Recommendations tab.")
@@ -533,11 +521,8 @@ def display_cost_analysis():
 
 def display_user_dashboard():
     """Display the user dashboard."""
-    colored_header(
-        label="User Dashboard",
-        description="Manage your saved projects",
-        color_name="blue-green"
-    )
+    st.header("User Dashboard")
+    st.info("Manage your saved projects")
     
     # Display user projects
     display_user_projects(st.session_state.user_id)
@@ -549,11 +534,8 @@ def display_user_dashboard():
 
 def display_help():
     """Display the help section."""
-    colored_header(
-        label="Help & Information",
-        description="Learn how to use the Construction Material Recommendation System",
-        color_name="blue-green"
-    )
+    st.header("Help & Information")
+    st.info("Learn how to use the Construction Material Recommendation System")
     
     st.subheader("About the System")
     st.write("""
