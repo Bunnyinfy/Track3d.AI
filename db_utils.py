@@ -352,7 +352,11 @@ def update_user_project(project_id, user_id, project_name, project_specs):
             # Update project
             project.project_name = project_name
             project.project_specs = project_specs
-            project.updated_at = datetime.datetime.utcnow()
+            # Set updated_at timestamp in the database
+            session.execute(
+                text("UPDATE user_projects SET updated_at = CURRENT_TIMESTAMP WHERE id = :id"),
+                {"id": project_id}
+            )
             
             session.commit()
             
