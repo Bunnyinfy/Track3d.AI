@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Project - {{ project.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        }
+        .card-header {
+            background-color: #343a40;
+            color: white;
+        }
+        .jumbotron {
+            background-color: #e9ecef;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: .3rem;
+        }
+        .range-slider {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Edit Project: {{ project.name }}</h1>
+            <div>
+                <a href="/projects/{{ project.id }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Edit Project Specifications</h4>
+            </div>
+            <div class="card-body">
+                <form action="/projects/{{ project.id }}/edit" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Project Information</h5>
+                            <div class="mb-3">
+                                <label for="project_name" class="form-label">Project Name</label>
+                                <input type="text" class="form-control" id="project_name" name="project_name" value="{{ project.name }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="project_description" class="form-label">Project Description</label>
+                                <textarea class="form-control" id="project_description" name="project_description" rows="3">{{ project.description }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="applications" class="form-label">Application</label>
+                                <select class="form-select" id="applications" name="applications" required>
+                                    {% for app in applications %}
+                                    <option value="{{ app }}" {% if app in project.applications %}selected{% endif %}>{{ app }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="material_types" class="form-label">Preferred Material Types (optional)</label>
+                                <select class="form-select" id="material_types" name="material_types" multiple>
+                                    {% for type in material_types %}
+                                    <option value="{{ type }}" {% if type in project.material_types %}selected{% endif %}>{{ type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5>Material Requirements</h5>
+                            <div class="mb-3">
+                                <label for="min_strength" class="form-label">Minimum Strength (MPa): <span id="min_strength_value">{{ project.min_strength_mpa }}</span></label>
+                                <input type="range" class="form-range" id="min_strength" name="min_strength" min="0" max="500" step="5" value="{{ project.min_strength_mpa }}" oninput="document.getElementById('min_strength_value').textContent = this.value">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="min_durability" class="form-label">Minimum Durability (years): <span id="min_durability_value">{{ project.min_durability_years }}</span></label>
+                                <input type="range" class="form-range" id="min_durability" name="min_durability" min="0" max="100" step="5" value="{{ project.min_durability_years }}" oninput="document.getElementById('min_durability_value').textContent = this.value">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fire_resistance" class="form-label">Fire Resistance Requirement (hours): <span id="fire_resistance_value">{{ project.fire_resistance_requirement }}</span></label>
+                                <input type="range" class="form-range" id="fire_resistance" name="fire_resistance" min="0" max="6" step="0.5" value="{{ project.fire_resistance_requirement }}" oninput="document.getElementById('fire_resistance_value').textContent = this.value">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="water_resistance" class="form-label">Water Resistance Requirement (1-10): <span id="water_resistance_value">{{ project.water_resistance_requirement }}</span></label>
+                                <input type="range" class="form-range" id="water_resistance" name="water_resistance" min="0" max="10" step="1" value="{{ project.water_resistance_requirement }}" oninput="document.getElementById('water_resistance_value').textContent = this.value">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="thermal_requirement" class="form-label">Thermal Conductivity Requirement</label>
+                                <select class="form-select" id="thermal_requirement" name="thermal_requirement">
+                                    <option value="" {% if not project.thermal_requirement %}selected{% endif %}>None</option>
+                                    <option value="low" {% if project.thermal_requirement == 'low' %}selected{% endif %}>Low (good insulation)</option>
+                                    <option value="high" {% if project.thermal_requirement == 'high' %}selected{% endif %}>High (good conductor)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="eco_friendly" class="form-label">Eco-Friendly Requirement (1-10): <span id="eco_friendly_value">{{ project.eco_friendly_requirement }}</span></label>
+                                <input type="range" class="form-range" id="eco_friendly" name="eco_friendly" min="0" max="10" step="1" value="{{ project.eco_friendly_requirement }}" oninput="document.getElementById('eco_friendly_value').textContent = this.value">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="budget" class="form-label">Budget Constraint ($ per unit)</label>
+                                <input type="number" class="form-control" id="budget" name="budget" min="0" max="10000" step="10" value="{{ project.budget_constraint or '' }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="installation_time" class="form-label">Installation Time Constraint</label>
+                                <select class="form-select" id="installation_time" name="installation_time">
+                                    <option value="" {% if not project.installation_time_constraint %}selected{% endif %}>None</option>
+                                    <option value="low" {% if project.installation_time_constraint == 'low' %}selected{% endif %}>Low (quick installation needed)</option>
+                                    <option value="high" {% if project.installation_time_constraint == 'high' %}selected{% endif %}>High (complex installation acceptable)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>Environmental Conditions</h5>
+                            <p class="text-muted">Rate the importance of resistance to each environmental condition (0 = not important, 10 = very important)</p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="heat_importance" class="form-label">Heat Resistance: <span id="heat_importance_value">{{ project.environmental_conditions.heat }}</span></label>
+                                <input type="range" class="form-range" id="heat_importance" name="heat_importance" min="0" max="10" step="1" value="{{ project.environmental_conditions.heat }}" oninput="document.getElementById('heat_importance_value').textContent = this.value">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="cold_importance" class="form-label">Cold Resistance: <span id="cold_importance_value">{{ project.environmental_conditions.cold }}</span></label>
+                                <input type="range" class="form-range" id="cold_importance" name="cold_importance" min="0" max="10" step="1" value="{{ project.environmental_conditions.cold }}" oninput="document.getElementById('cold_importance_value').textContent = this.value">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="humidity_importance" class="form-label">Humidity Resistance: <span id="humidity_importance_value">{{ project.environmental_conditions.humidity }}</span></label>
+                                <input type="range" class="form-range" id="humidity_importance" name="humidity_importance" min="0" max="10" step="1" value="{{ project.environmental_conditions.humidity }}" oninput="document.getElementById('humidity_importance_value').textContent = this.value">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="uv_importance" class="form-label">UV Resistance: <span id="uv_importance_value">{{ project.environmental_conditions.uv }}</span></label>
+                                <input type="range" class="form-range" id="uv_importance" name="uv_importance" min="0" max="10" step="1" value="{{ project.environmental_conditions.uv }}" oninput="document.getElementById('uv_importance_value').textContent = this.value">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Update Project & Recalculate Recommendations</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

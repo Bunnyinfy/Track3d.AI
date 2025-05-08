@@ -53,6 +53,9 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" href="/comparisons">Material Comparison</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="/projects">My Projects</a>
+            </li>
         </ul>
 
         <div class="tab-content" id="myTabContent">
@@ -67,6 +70,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h5>Basic Project Information</h5>
+                                    <div class="mb-3">
+                                        <label for="project_name" class="form-label">Project Name</label>
+                                        <input type="text" class="form-control" id="project_name" name="project_name" placeholder="Enter project name" value="New Project">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="project_description" class="form-label">Project Description (optional)</label>
+                                        <textarea class="form-control" id="project_description" name="project_description" rows="2" placeholder="Brief project description"></textarea>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <label for="applications" class="form-label">Application</label>
                                         <select class="form-select" id="applications" name="applications" required>
@@ -243,6 +256,15 @@
                             // Display scores chart
                             if (response.scores_chart) {
                                 Plotly.newPlot('scoresChart', JSON.parse(response.scores_chart));
+                            }
+                            
+                            // Display project saved message if project_id is present
+                            if (response.project_id) {
+                                $('#recommendedMaterialsList').before(`
+                                    <div class="alert alert-success mb-4">
+                                        <p class="mb-0">Project saved! <a href="/projects/${response.project_id}" class="alert-link">View project details</a></p>
+                                    </div>
+                                `);
                             }
                             
                             // Display recommended materials

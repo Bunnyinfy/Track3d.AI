@@ -280,6 +280,141 @@ def index():
                           applications=APPLICATIONS,
                           material_types=MATERIAL_TYPES)
 
+@app.route('/projects')
+def projects_list():
+    """List all projects."""
+    # Query all projects from the database
+    all_projects = Project.query.order_by(Project.created_at.desc()).all()
+    return render_template('projects.html',
+                          projects=all_projects,
+                          applications=APPLICATIONS)
+
+@app.route('/projects/new', methods=['POST'])
+def create_project():
+    """Create a new project."""
+    project_name = request.form.get('project_name')
+    project_description = request.form.get('project_description', '')
+    application = request.form.get('applications')
+    
+    # Create a new project
+    new_project = Project(
+        name=project_name,
+        description=project_description,
+        applications=[application],
+        material_types=[],
+        min_strength_mpa=0,
+        min_durability_years=0,
+        fire_resistance_requirement=0,
+        water_resistance_requirement=0,
+        thermal_requirement=None,
+        eco_friendly_requirement=0,
+        budget_constraint=None,
+        installation_time_constraint=None,
+        environmental_conditions={
+            'heat': 0,
+            'cold': 0,
+            'humidity': 0,
+            'uv': 0
+        }
+    )
+    
+    db.session.add(new_project)
+    db.session.commit()
+    
+    # Redirect to the project specifications page
+    return redirect(url_for('project_detail', project_id=new_project.id))
+
+@app.route('/projects/<int:project_id>')
+def project_detail(project_id):
+    """Show project details and recommendations."""
+    # Get the project
+    project = Project.query.get_or_404(project_id)
+    
+    # Get recommendations for this project
+    recommendations = Recommendation.query.filter_by(project_id=project_id).order_by(Recommendation.rank).all()
+    
+    # Get materials for the recommendations
+    material_ids = [rec.material_id for rec in recommendations]
+    materials = Material.query.filter(Material.id.in_(material_ids)).all()
+    
+    # Create a dictionary of materials by ID for easier access
+    materials_dict = {material.id: material for material in materials}
+    
+    return render_template('project_detail.html',
+                          project=project,
+                          recommendations=recommendations,
+                          materials_dict=materials_dict)
+
+@app.route('/projects/<int:project_id>/edit', methods=['GET', 'POST'])
+def edit_project(project_id):
+    """Edit project details."""
+    # Get the project
+    project = Project.query.get_or_404(project_id)
+    
+    if request.method == 'POST':
+        # Update project details
+        project.name = request.form.get('project_name')
+        project.description = request.form.get('project_description', '')
+        project.applications = [request.form.get('applications')]
+        
+        # Update other project specifications
+        project.min_strength_mpa = float(request.form.get('min_strength', 0))
+        project.min_durability_years = int(request.form.get('min_durability', 0))
+        project.fire_resistance_requirement = float(request.form.get('fire_resistance', 0))
+        project.water_resistance_requirement = int(request.form.get('water_resistance', 0))
+        project.thermal_requirement = request.form.get('thermal_requirement')
+        project.eco_friendly_requirement = int(request.form.get('eco_friendly', 0))
+        project.budget_constraint = float(request.form.get('budget')) if request.form.get('budget') else None
+        project.installation_time_constraint = request.form.get('installation_time')
+        project.environmental_conditions = {
+            'heat': int(request.form.get('heat_importance', 0)),
+            'cold': int(request.form.get('cold_importance', 0)),
+            'humidity': int(request.form.get('humidity_importance', 0)),
+            'uv': int(request.form.get('uv_importance', 0))
+        }
+        
+        db.session.commit()
+        
+        # Recalculate recommendations
+        project_specs = {
+            'applications': project.applications[0],
+            'material_types': project.material_types,
+            'min_strength_mpa': project.min_strength_mpa,
+            'min_durability_years': project.min_durability_years,
+            'fire_resistance_requirement': project.fire_resistance_requirement,
+            'water_resistance_requirement': project.water_resistance_requirement,
+            'thermal_requirement': project.thermal_requirement,
+            'eco_friendly_requirement': project.eco_friendly_requirement,
+            'budget_constraint': project.budget_constraint,
+            'installation_time_constraint': project.installation_time_constraint,
+            'environmental_conditions': project.environmental_conditions
+        }
+        
+        # Get new recommendations
+        recommended_materials = recommender.recommend_materials(project_specs, n_recommendations=10)
+        
+        # Remove old recommendations
+        Recommendation.query.filter_by(project_id=project_id).delete()
+        
+        # Save new recommendations
+        for i, (_, material) in enumerate(recommended_materials.iterrows()):
+            recommendation = Recommendation(
+                project_id=project_id,
+                material_id=material['id'],
+                score=float(material['total_score']),
+                rank=i+1
+            )
+            db.session.add(recommendation)
+        
+        db.session.commit()
+        
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    return render_template('edit_project.html',
+                          project=project,
+                          applications=APPLICATIONS,
+                          material_types=MATERIAL_TYPES)
+
 @app.route('/get_recommendations', methods=['POST'])
 def get_recommendations():
     # Get form data
