@@ -18,7 +18,6 @@ from material_data import (
 )
 from data_utils import calculate_material_scores, filter_materials_by_application
 from model import MaterialRecommender
-from database import init_db, seed_database, db, Material, Supplier, Project, Recommendation, UserFeedback
 import os
 
 app = Flask(__name__)
@@ -28,10 +27,6 @@ app.secret_key = os.urandom(24)
 materials_df = generate_material_database()
 suppliers_df = generate_supplier_database()
 recommender = MaterialRecommender()
-
-# Initialize and seed the database
-init_db(app)
-seed_database(app, materials_df, suppliers_df)
 
 def create_material_comparison_chart(selected_material_ids):
     """
@@ -280,141 +275,6 @@ def index():
                           applications=APPLICATIONS,
                           material_types=MATERIAL_TYPES)
 
-@app.route('/projects')
-def projects_list():
-    """List all projects."""
-    # Query all projects from the database
-    all_projects = Project.query.order_by(Project.created_at.desc()).all()
-    return render_template('projects.html',
-                          projects=all_projects,
-                          applications=APPLICATIONS)
-
-@app.route('/projects/new', methods=['POST'])
-def create_project():
-    """Create a new project."""
-    project_name = request.form.get('project_name')
-    project_description = request.form.get('project_description', '')
-    application = request.form.get('applications')
-    
-    # Create a new project
-    new_project = Project(
-        name=project_name,
-        description=project_description,
-        applications=[application],
-        material_types=[],
-        min_strength_mpa=0,
-        min_durability_years=0,
-        fire_resistance_requirement=0,
-        water_resistance_requirement=0,
-        thermal_requirement=None,
-        eco_friendly_requirement=0,
-        budget_constraint=None,
-        installation_time_constraint=None,
-        environmental_conditions={
-            'heat': 0,
-            'cold': 0,
-            'humidity': 0,
-            'uv': 0
-        }
-    )
-    
-    db.session.add(new_project)
-    db.session.commit()
-    
-    # Redirect to the project specifications page
-    return redirect(url_for('project_detail', project_id=new_project.id))
-
-@app.route('/projects/<int:project_id>')
-def project_detail(project_id):
-    """Show project details and recommendations."""
-    # Get the project
-    project = Project.query.get_or_404(project_id)
-    
-    # Get recommendations for this project
-    recommendations = Recommendation.query.filter_by(project_id=project_id).order_by(Recommendation.rank).all()
-    
-    # Get materials for the recommendations
-    material_ids = [rec.material_id for rec in recommendations]
-    materials = Material.query.filter(Material.id.in_(material_ids)).all()
-    
-    # Create a dictionary of materials by ID for easier access
-    materials_dict = {material.id: material for material in materials}
-    
-    return render_template('project_detail.html',
-                          project=project,
-                          recommendations=recommendations,
-                          materials_dict=materials_dict)
-
-@app.route('/projects/<int:project_id>/edit', methods=['GET', 'POST'])
-def edit_project(project_id):
-    """Edit project details."""
-    # Get the project
-    project = Project.query.get_or_404(project_id)
-    
-    if request.method == 'POST':
-        # Update project details
-        project.name = request.form.get('project_name')
-        project.description = request.form.get('project_description', '')
-        project.applications = [request.form.get('applications')]
-        
-        # Update other project specifications
-        project.min_strength_mpa = float(request.form.get('min_strength', 0))
-        project.min_durability_years = int(request.form.get('min_durability', 0))
-        project.fire_resistance_requirement = float(request.form.get('fire_resistance', 0))
-        project.water_resistance_requirement = int(request.form.get('water_resistance', 0))
-        project.thermal_requirement = request.form.get('thermal_requirement')
-        project.eco_friendly_requirement = int(request.form.get('eco_friendly', 0))
-        project.budget_constraint = float(request.form.get('budget')) if request.form.get('budget') else None
-        project.installation_time_constraint = request.form.get('installation_time')
-        project.environmental_conditions = {
-            'heat': int(request.form.get('heat_importance', 0)),
-            'cold': int(request.form.get('cold_importance', 0)),
-            'humidity': int(request.form.get('humidity_importance', 0)),
-            'uv': int(request.form.get('uv_importance', 0))
-        }
-        
-        db.session.commit()
-        
-        # Recalculate recommendations
-        project_specs = {
-            'applications': project.applications[0],
-            'material_types': project.material_types,
-            'min_strength_mpa': project.min_strength_mpa,
-            'min_durability_years': project.min_durability_years,
-            'fire_resistance_requirement': project.fire_resistance_requirement,
-            'water_resistance_requirement': project.water_resistance_requirement,
-            'thermal_requirement': project.thermal_requirement,
-            'eco_friendly_requirement': project.eco_friendly_requirement,
-            'budget_constraint': project.budget_constraint,
-            'installation_time_constraint': project.installation_time_constraint,
-            'environmental_conditions': project.environmental_conditions
-        }
-        
-        # Get new recommendations
-        recommended_materials = recommender.recommend_materials(project_specs, n_recommendations=10)
-        
-        # Remove old recommendations
-        Recommendation.query.filter_by(project_id=project_id).delete()
-        
-        # Save new recommendations
-        for i, (_, material) in enumerate(recommended_materials.iterrows()):
-            recommendation = Recommendation(
-                project_id=project_id,
-                material_id=material['id'],
-                score=float(material['total_score']),
-                rank=i+1
-            )
-            db.session.add(recommendation)
-        
-        db.session.commit()
-        
-        return redirect(url_for('project_detail', project_id=project_id))
-    
-    return render_template('edit_project.html',
-                          project=project,
-                          applications=APPLICATIONS,
-                          material_types=MATERIAL_TYPES)
-
 @app.route('/get_recommendations', methods=['POST'])
 def get_recommendations():
     # Get form data
@@ -440,47 +300,8 @@ def get_recommendations():
     # Store project specs in session
     session['project_specs'] = project_specs
     
-    # Project name from form or default
-    project_name = request.form.get('project_name', 'Unnamed Project')
-    project_description = request.form.get('project_description', '')
-    
-    # Save project to database
-    new_project = Project(
-        name=project_name,
-        description=project_description,
-        applications=[project_specs['applications']],
-        material_types=project_specs['material_types'],
-        min_strength_mpa=project_specs['min_strength_mpa'],
-        min_durability_years=project_specs['min_durability_years'],
-        fire_resistance_requirement=project_specs['fire_resistance_requirement'],
-        water_resistance_requirement=project_specs['water_resistance_requirement'],
-        thermal_requirement=project_specs['thermal_requirement'],
-        eco_friendly_requirement=project_specs['eco_friendly_requirement'],
-        budget_constraint=project_specs['budget_constraint'],
-        installation_time_constraint=project_specs['installation_time_constraint'],
-        environmental_conditions=project_specs['environmental_conditions']
-    )
-    
-    db.session.add(new_project)
-    db.session.commit()
-    
-    # Store project ID in session
-    session['project_id'] = new_project.id
-    
     # Get recommendations
     recommended_materials = recommender.recommend_materials(project_specs, n_recommendations=10)
-    
-    # Save recommendations to database
-    for i, (_, material) in enumerate(recommended_materials.iterrows()):
-        recommendation = Recommendation(
-            project_id=new_project.id,
-            material_id=material['id'],
-            score=float(material['total_score']),
-            rank=i+1
-        )
-        db.session.add(recommendation)
-    
-    db.session.commit()
     
     # Convert DataFrame to dict for JSON serialization
     recommended_materials_dict = recommended_materials.reset_index().to_dict(orient='records')
@@ -494,8 +315,7 @@ def get_recommendations():
     return jsonify({
         'success': True,
         'materials': recommended_materials_dict,
-        'scores_chart': scores_chart,
-        'project_id': new_project.id
+        'scores_chart': scores_chart
     })
 
 @app.route('/get_durability_cost_chart')
@@ -540,39 +360,14 @@ def material_detail(material_id):
 
 @app.route('/comparisons')
 def comparisons():
-    # Initialize comparisons list if it doesn't exist
-    if 'comparisons' not in session:
-        session['comparisons'] = []
-    
-    selected_material_ids = session['comparisons']
-    
-    # Get filter type from query parameters
-    filter_type = request.args.get('filter_type')
-    
-    # Get top materials for the Quick Add section
-    if filter_type:
-        # Filter by material type if specified
-        top_materials = materials_df[materials_df['type'] == filter_type].head(10)
-    else:
-        # Otherwise show a mix of different materials
-        top_materials = materials_df.sample(min(10, len(materials_df)))
-    
-    # Get all material types for the filter buttons
-    material_types = sorted(materials_df['type'].unique().tolist())
-    
-    # If no comparisons selected, render template with just the Quick Add section
-    if not selected_material_ids:
+    if 'comparisons' not in session or not session['comparisons']:
         return render_template('comparisons.html', 
                               materials=[],
-                              top_materials=top_materials.to_dict(orient='records'),
-                              material_types=material_types,
-                              selected_type=filter_type,
-                              selected_material_ids=selected_material_ids,
                               comparison_chart=None,
                               environmental_chart=None,
                               cost_chart=None)
     
-    # Get selected materials
+    selected_material_ids = session['comparisons']
     selected_materials = materials_df[materials_df['id'].isin(selected_material_ids)]
     
     # Create comparison charts
@@ -586,10 +381,6 @@ def comparisons():
     
     return render_template('comparisons.html',
                           materials=selected_materials.to_dict(orient='records'),
-                          top_materials=top_materials.to_dict(orient='records'),
-                          material_types=material_types,
-                          selected_type=filter_type,
-                          selected_material_ids=selected_material_ids,
                           suppliers=suppliers.to_dict(orient='records'),
                           comparison_chart=comparison_chart,
                           environmental_chart=environmental_chart,
@@ -610,24 +401,14 @@ def remove_from_comparison(material_id):
     if 'comparisons' in session and material_id in session['comparisons']:
         session['comparisons'].remove(material_id)
     
-    # Get the referrer to return to the same page
-    referrer = request.referrer
-    if referrer:
-        return redirect(referrer)
-    else:
-        return redirect(url_for('comparisons'))
+    return redirect(request.referrer or url_for('comparisons'))
 
 @app.route('/clear_comparisons')
 def clear_comparisons():
     if 'comparisons' in session:
         session['comparisons'] = []
     
-    # Get the referrer to return to the same page
-    referrer = request.referrer
-    if referrer:
-        return redirect(referrer)
-    else:
-        return redirect(url_for('comparisons'))
+    return redirect(url_for('comparisons'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
