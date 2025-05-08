@@ -540,14 +540,39 @@ def material_detail(material_id):
 
 @app.route('/comparisons')
 def comparisons():
-    if 'comparisons' not in session or not session['comparisons']:
+    # Initialize comparisons list if it doesn't exist
+    if 'comparisons' not in session:
+        session['comparisons'] = []
+    
+    selected_material_ids = session['comparisons']
+    
+    # Get filter type from query parameters
+    filter_type = request.args.get('filter_type')
+    
+    # Get top materials for the Quick Add section
+    if filter_type:
+        # Filter by material type if specified
+        top_materials = materials_df[materials_df['type'] == filter_type].head(10)
+    else:
+        # Otherwise show a mix of different materials
+        top_materials = materials_df.sample(min(10, len(materials_df)))
+    
+    # Get all material types for the filter buttons
+    material_types = sorted(materials_df['type'].unique().tolist())
+    
+    # If no comparisons selected, render template with just the Quick Add section
+    if not selected_material_ids:
         return render_template('comparisons.html', 
                               materials=[],
+                              top_materials=top_materials.to_dict(orient='records'),
+                              material_types=material_types,
+                              selected_type=filter_type,
+                              selected_material_ids=selected_material_ids,
                               comparison_chart=None,
                               environmental_chart=None,
                               cost_chart=None)
     
-    selected_material_ids = session['comparisons']
+    # Get selected materials
     selected_materials = materials_df[materials_df['id'].isin(selected_material_ids)]
     
     # Create comparison charts
@@ -561,6 +586,10 @@ def comparisons():
     
     return render_template('comparisons.html',
                           materials=selected_materials.to_dict(orient='records'),
+                          top_materials=top_materials.to_dict(orient='records'),
+                          material_types=material_types,
+                          selected_type=filter_type,
+                          selected_material_ids=selected_material_ids,
                           suppliers=suppliers.to_dict(orient='records'),
                           comparison_chart=comparison_chart,
                           environmental_chart=environmental_chart,
@@ -581,14 +610,24 @@ def remove_from_comparison(material_id):
     if 'comparisons' in session and material_id in session['comparisons']:
         session['comparisons'].remove(material_id)
     
-    return redirect(request.referrer or url_for('comparisons'))
+    # Get the referrer to return to the same page
+    referrer = request.referrer
+    if referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('comparisons'))
 
 @app.route('/clear_comparisons')
 def clear_comparisons():
     if 'comparisons' in session:
         session['comparisons'] = []
     
-    return redirect(url_for('comparisons'))
+    # Get the referrer to return to the same page
+    referrer = request.referrer
+    if referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('comparisons'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

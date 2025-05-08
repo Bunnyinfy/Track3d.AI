@@ -45,10 +45,58 @@
             <a href="/" class="btn btn-outline-secondary">Back to Home</a>
         </div>
 
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Quick Add Materials to Comparison</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h5>Filter by Material Type</h5>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for type in material_types %}
+                            <a href="/comparisons?filter_type={{ type }}" class="btn btn-sm {% if type == selected_type %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ type }}</a>
+                            {% endfor %}
+                            {% if selected_type %}
+                            <a href="/comparisons" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Top Materials</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for material in top_materials %}
+                                    <tr>
+                                        <td>{{ material.name }}</td>
+                                        <td>{{ material.type }}</td>
+                                        <td>
+                                            <a href="/add_to_comparison/{{ material.id }}" class="btn btn-sm {% if material.id in selected_material_ids %}btn-success disabled{% else %}btn-outline-primary{% endif %}">
+                                                {% if material.id in selected_material_ids %}Added{% else %}Add{% endif %}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         {% if not materials %}
         <div class="alert alert-info">
             <h4 class="alert-heading">No materials selected for comparison</h4>
-            <p>Add materials from the recommendations or material details pages to compare them.</p>
+            <p>Add materials from the section above or from recommendation pages to compare them.</p>
             <hr>
             <p class="mb-0">Return to the <a href="/" class="alert-link">home page</a> to get material recommendations.</p>
         </div>
@@ -61,18 +109,38 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="d-flex flex-wrap">
-                    {% for material in materials %}
-                    <div class="material-chip d-flex align-items-center">
-                        <span>{{ material.name }}</span>
-                        <a href="/remove_from_comparison/{{ material.id }}" class="ms-2 text-danger" title="Remove">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                            </svg>
-                        </a>
-                    </div>
-                    {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Type</th>
+                                <th>Strength (MPa)</th>
+                                <th>Durability (years)</th>
+                                <th>Cost ($)</th>
+                                <th>Eco-Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in materials %}
+                            <tr>
+                                <td>{{ material.name }}</td>
+                                <td>{{ material.type }}</td>
+                                <td>{{ material.strength_mpa }}</td>
+                                <td>{{ material.durability_years }}</td>
+                                <td>{{ material.cost_per_unit }}</td>
+                                <td>{{ material.eco_friendly_score }}/10</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/material/{{ material.id }}" class="btn btn-outline-primary">Details</a>
+                                        <a href="/remove_from_comparison/{{ material.id }}" class="btn btn-outline-danger">Remove</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
