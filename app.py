@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from streamlit_option_menu import option_menu
-from streamlit_extras.colored_header import colored_header
 import os
 import json
 

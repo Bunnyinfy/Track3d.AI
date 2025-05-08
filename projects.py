@@ -31,7 +31,7 @@ def save_current_project(user_id, project_name=None):
     
     project_id = save_user_project(user_id, project_name, st.session_state.project_specs)
     
-    if project_id is not None and project_id > 0:
+    if project_id is not None:
         return True, f"Project '{project_name}' saved successfully!"
     else:
         return False, "Failed to save project."
