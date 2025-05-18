@@ -9,9 +9,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from db_utils import check_and_create_tables
 from material_data import generate_material_database, generate_supplier_database
-from dotenv import load_dotenv
-
-load_dotenv()
+import streamlit as st
 
 
 def init_database():
@@ -22,8 +20,7 @@ def init_database():
     check_and_create_tables()
 
     # Get database URL from environment
-    DATABASE_URL = os.environ.get("DATABASE_URL", "")
-
+    DATABASE_URL = st.secrets.get("DATABASE_URL", "")
     if not DATABASE_URL:
         print("Error: DATABASE_URL environment variable not set.")
         return

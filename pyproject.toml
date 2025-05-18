@@ -14,4 +14,5 @@ dependencies = [
     "sqlalchemy>=2.0.40",
     "psycopg2-binary>=2.9.10",
     "streamlit-option-menu>=0.4.0",
+    "python-dotenv"
 ]

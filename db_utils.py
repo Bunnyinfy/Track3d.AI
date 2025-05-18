@@ -3,6 +3,7 @@ Database utility functions for the construction material recommendation system.
 This module handles database connections and operations.
 """
 
+import streamlit as st
 import os
 import json
 from sqlalchemy import (
@@ -22,13 +23,12 @@ from sqlalchemy.orm import sessionmaker, relationship
 import datetime
 from passlib.hash import pbkdf2_sha256
 import pandas as pd
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Create a SQLAlchemy engine
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
-print("DATABASE_URL =", os.environ.get("DATABASE_URL"))
+
+DATABASE_URL = st.secrets["DATABASE_URL"]
+print("DATABASE_URL =", DATABASE_URL)
+
 engine = create_engine(DATABASE_URL)
 
 
