@@ -625,7 +625,7 @@ def main():
 
     # Show app header
     st.markdown(
-        '<div class="main-header">🧱 BuildWise - Construction Material Recommendation System</div>',
+        '<div class="main-header">🧱 BW Construction Material Recommendation System</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
