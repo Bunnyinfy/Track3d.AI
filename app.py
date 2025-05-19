@@ -36,8 +36,8 @@ from init_db import init_database
 
 # Set page configuration
 st.set_page_config(
-    page_title="Construction Material Recommendation System",
-    page_icon="🏗️",
+    page_title="BuildWise - Construction Material Recommendation System",
+    page_icon="🧱",
     layout="wide",
 )
 
