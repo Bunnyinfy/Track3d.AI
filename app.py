@@ -345,7 +345,6 @@ def display_project_specifications():
     def on_get_recommendations_click():
         get_recommendations()
         st.session_state.selected_menu = 1
-        st.experimental_rerun()
 
     # Get recommendations button
     if st.button(
