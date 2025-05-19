@@ -342,10 +342,15 @@ def display_project_specifications():
             key="uv_importance",
         )
 
+    def on_get_recommendations_click():
+        get_recommendations()
+        st.session_state.selected_menu = 1
+        st.experimental_rerun()
+
     # Get recommendations button
     if st.button(
         "Get Material Recommendations",
-        on_click=get_recommendations,
+        on_click=on_get_recommendations_click,
         type="primary",
         use_container_width=True,
     ):
