@@ -638,9 +638,6 @@ def main():
         st.subheader(f"Welcome, {st.session_state.username}!")
 
         # Navigation menu
-        if "selected_menu" not in st.session_state:
-            st.session_state.selected_menu = 0
-
         menu_options = [
             "Project Specifications",
             "Recommendations",
@@ -650,13 +647,7 @@ def main():
             "Help",
         ]
 
-        if "selected_menu" not in st.session_state:
-            st.session_state.selected_menu = 0
-
-        # Update selected_menu before rendering option_menu to avoid double click issue
-        if "selected_menu" not in st.session_state:
-            st.session_state.selected_menu = 0
-
+        # Update selected_menu immediately when a new menu item is selected
         selected = option_menu(
             menu_title=None,
             options=menu_options,
@@ -682,6 +673,11 @@ def main():
             },
         )
 
+        # Immediately update the selected menu index in session state
+        new_index = menu_options.index(selected)
+        if st.session_state.selected_menu != new_index:
+            st.session_state.selected_menu = new_index
+
         st.divider()
 
         # Logout button
@@ -702,11 +698,6 @@ def main():
         display_user_dashboard()
     elif selected == "Help":
         display_help()
-
-    # Update the selected menu in session state only if changed
-    new_index = menu_options.index(selected)
-    if st.session_state.selected_menu != new_index:
-        st.session_state.selected_menu = new_index
 
 
 if __name__ == "__main__":
