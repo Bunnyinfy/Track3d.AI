@@ -83,12 +83,6 @@ BuildWise is a Streamlit-based intelligent recommendation platform designed to a
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License. Feel free to use, adapt, and extend it for your own use.
-
----
-
 ## ✉️ Contact
 
 For queries or support:
