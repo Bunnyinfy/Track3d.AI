@@ -49,7 +49,7 @@ BuildWise is a Streamlit-based intelligent recommendation platform designed to a
 - **Visualization**: `plotly`, `streamlit-option-menu`
 - **Data Handling**: `pandas`, `numpy`
 - **Authentication & State**: Streamlit session state + custom logic
-- **Persistence (optional)**: Local JSON/CSV or lightweight DB
+- **DataBase**: PostgreSQL
 
 ---
 
