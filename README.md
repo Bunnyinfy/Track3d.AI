@@ -63,31 +63,11 @@ BuildWise is a Streamlit-based intelligent recommendation platform designed to a
 
 ---
 
-## 📦 Setup Instructions
-
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/yourusername/buildwise.git
-   cd buildwise
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Run the app**
-   ```bash
-   streamlit run app.py
-   ```
-
----
 
 ## ✉️ Contact
 
 For queries or support:
 - 📧 Email: penugondasrinivas20@gmail.com
-- 📞 Phone: (+91) 7995787167
 
 ---
 
