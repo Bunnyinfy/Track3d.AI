@@ -55,11 +55,11 @@ BuildWise is a Streamlit-based intelligent recommendation platform designed to a
 
 ## 🌍 Use Cases
 
-- 🏗️ **Architects** selecting facade or insulation materials
-- 🔧 **Contractors** evaluating trade-offs between cost and durability
-- 🌱 **Green building consultants** prioritizing eco-friendly materials
-- 🧰 **Procurement teams** comparing supplier reliability
-- 🏢 **Real estate developers** managing multiple project specs and material decisions
+- **Architects** selecting facade or insulation materials
+- **Contractors** evaluating trade-offs between cost and durability
+- **Green building consultants** prioritizing eco-friendly materials
+- **Procurement teams** comparing supplier reliability
+- **Real estate developers** managing multiple project specs and material decisions
 
 ---
 
@@ -67,7 +67,7 @@ BuildWise is a Streamlit-based intelligent recommendation platform designed to a
 ## ✉️ Contact
 
 For queries or support:
-- 📧 Email: penugondasrinivas20@gmail.com
+- Email: penugondasrinivas20@gmail.com
 
 ---
 
